@@ -35,8 +35,16 @@ export default function Navbar() {
   ];
 
   const tryAppItems = [
-    { label: 'Try as Solo', href: '/try/solo', description: 'Perfect for individual lawyers' },
-    { label: 'Try as Small Firm', href: '/try/small-firm', description: 'Ideal for small teams' },
+    {
+      label: "Try as Lawyer",
+      href: "/signup?role=lawyer",
+      description: "Perfect for individual attorneys",
+    },
+    {
+      label: "Try as Law Firm",
+      href: "/signup?role=lawFirm",
+      description: "Ideal for teams and firms",
+    },
   ];
 
   // Mobile menu items

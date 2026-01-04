@@ -7,7 +7,8 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import { useRouter, useSearchParams } from "next/navigation";
+import {  useRouter, useSearchParams } from "next/navigation";
+import axios from "axios";
 
 function SignUpForm() {
     const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ function SignUpForm() {
         confirmPassword: "",
     });
 
+    const router = useRouter();
     const searchParams = useSearchParams();
 
     const role = searchParams.get("role");
@@ -29,7 +31,6 @@ function SignUpForm() {
     const [isLoading, setIsLoading] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [step, setStep] = useState(0);
 
@@ -132,16 +133,44 @@ function SignUpForm() {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+       try{
+         e.preventDefault();
 
-        // final submit
-        if (!validateForm()) return;
-        setIsLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Form submitted:", formData);
-            setIsLoading(false);
-        }, 500);
+         // final submit
+         if (!validateForm()) return;
+         setIsLoading(true);
+
+         const data = await axios.post(
+           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/register`,
+           {
+             org_type: lawyer ? "solo" : "firm",
+             org_name: formData.lawFirmName || formData.lawyerName,
+             admin_name: formData.adminName || formData.lawyerName,
+             admin_email: formData.email,
+             admin_password: formData.password,
+             confirm_admin_password: formData.confirmPassword,
+           },
+           {
+             headers: {
+               "Content-Type": "application/json",
+             },
+           }
+         );
+
+         console.log(data)
+
+         if (data.status === 200 ||  data.status === 201 ) {
+           toast.success(data.data.message);
+           router.push("/signin");
+         }
+       }
+       catch(err){
+        console.log(err);
+        toast.error("Something went wrong")
+       }
+       finally{
+        setIsLoading(false);
+       }
     };
 
     return (
@@ -631,7 +660,7 @@ function SignUpForm() {
                                             <Input
                                                 label="Confirm Password"
                                                 type={
-                                                    showConfirmPassword
+                                                    showPassword
                                                         ? "text"
                                                         : "password"
                                                 }
@@ -645,13 +674,13 @@ function SignUpForm() {
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    setShowConfirmPassword(
+                                                    setShowPassword(
                                                         (prev) => !prev
                                                     )
                                                 }
                                                 className="absolute top-10 right-3 text-neutral-500 hover:text-black transition-colors"
                                             >
-                                                {showConfirmPassword ? (
+                                                {showPassword ? (
                                                     <EyeIcon />
                                                 ) : (
                                                     <EyeOffIcon />

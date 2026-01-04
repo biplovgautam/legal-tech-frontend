@@ -84,7 +84,7 @@ export default function Home() {
                                     }
                                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-white text-black rounded-lg hover:bg-neutral-100 transition-all duration-200 font-semibold text-base sm:text-lg shadow-xl cursor-pointer"
                                 >
-                                    Try Now
+                                    Try for Free
                                     <svg
                                         className={`w-5 h-5 transition-transform duration-200 ${
                                             isTryDropdownOpen
@@ -114,31 +114,31 @@ export default function Home() {
                                 >
                                     <div className="py-2">
                                         <Link
-                                            href="/signup?role=lawyer"
+                                            href="/demo"
                                             className="block px-6 py-4 hover:bg-neutral-50 transition-colors duration-150"
                                             onClick={() =>
                                                 setIsTryDropdownOpen(false)
                                             }
                                         >
                                             <div className="font-semibold text-neutral-900">
-                                                Try as Lawyer
+                                                Try as Demo
                                             </div>
                                             <div className="text-sm text-neutral-500 mt-1">
-                                                Perfect for individual attorneys
+                                                Perfect for showing off
                                             </div>
                                         </Link>
                                         <Link
-                                            href="/signup?role=lawFirm"
+                                            href="/demo"
                                             className="block px-6 py-4 hover:bg-neutral-50 transition-colors duration-150"
                                             onClick={() =>
                                                 setIsTryDropdownOpen(false)
                                             }
                                         >
                                             <div className="font-semibold text-neutral-900">
-                                                Try as Law Firm
+                                                Try as Test
                                             </div>
                                             <div className="text-sm text-neutral-500 mt-1">
-                                                Ideal for teams and firms
+                                                Perfect for testing off
                                             </div>
                                         </Link>
                                     </div>
