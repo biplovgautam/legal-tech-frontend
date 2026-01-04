@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Input from "@/components/ui/Input";
@@ -9,7 +9,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function SignUpPage() {
+function SignUpForm() {
     const [formData, setFormData] = useState({
         lawFirm: false,
         lawyer: false,
@@ -729,5 +729,13 @@ export default function SignUpPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SignUpPage() {
+    return (
+        <Suspense fallback="">
+            <SignUpForm />
+        </Suspense>
     );
 }
