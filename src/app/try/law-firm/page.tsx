@@ -252,7 +252,7 @@ export default function LawFirmPage() {
                                     onClick={() =>
                                         setShowPassword((prev) => !prev)
                                     }
-                                    className="absolute top-10 right-3 text-gray-300"
+                                    className="absolute top-10 right-3 text-neutral-500 hover:text-black transition-colors"
                                 >
                                     {showPassword ? (
                                         <EyeIcon />
@@ -283,7 +283,7 @@ export default function LawFirmPage() {
                                     onClick={() =>
                                         setShowConfirmPassword((prev) => !prev)
                                     }
-                                    className="absolute top-10 right-3 text-gray-300"
+                                    className="absolute top-10 right-3 text-neutral-500 hover:text-black transition-colors"
                                 >
                                     {showConfirmPassword ? (
                                         <EyeIcon />
