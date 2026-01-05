@@ -1,15 +1,23 @@
-'use client';
+"use client";
 
-import { useState, FormEvent } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import Input from '@/components/ui/Input';
-import Button from '@/components/ui/Button';
+import { useState, FormEvent } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function SignInPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -18,16 +26,16 @@ export default function SignInPage() {
 
     // Email validation
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     // Password validation
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -43,12 +51,57 @@ export default function SignInPage() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Sign in with:', { email, password });
+    try {
+      const data = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/login`,
+        {
+          email,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const { access_token, expires_at, expires_at_http, org_type } = data.data;
+
+      if (data.status === 200 || data.status === 201) {
+        const cok = await Cookies.set("access_token", access_token, {
+          expires: new Date(expires_at_http) || new Date(expires_at / 86400),
+          secure: true,
+          sameSite: "lax",
+        });
+
+        console.log(cok);
+
+        toast.success(data.data.message || "Login successful");
+        if (org_type === "SOLO") {
+          router.push("/dashboard/solo");
+        } else if (org_type === "FIRM") {
+          router.push("/dashboard/firm");
+        } else {
+          router.push("/dashboard");
+        }
+      } else {
+        toast.error(data.data);
+      }
+    } catch (err) {
+      console.log(err);
+
+      if (axios.isAxiosError(err)) {
+        toast.error(
+          err.response?.data?.detail ??
+            err.response?.data?.message ??
+            "Login failed"
+        );
+      } else {
+        toast.error("Something went wrong");
+      }
+    } finally {
       setIsLoading(false);
-      // Handle successful sign in here
-    }, 2000);
+    }
   };
 
   return (
@@ -99,13 +152,14 @@ export default function SignInPage() {
             {/* Password Input */}
             <div className="relative">
               <Input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 label="Password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  if (errors.password) setErrors({ ...errors, password: undefined });
+                  if (errors.password)
+                    setErrors({ ...errors, password: undefined });
                 }}
                 error={errors.password}
                 autoComplete="current-password"
@@ -116,13 +170,38 @@ export default function SignInPage() {
                 className="absolute right-3 top-[42px] text-neutral-500 hover:text-neutral-700"
               >
                 {showPassword ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                    />
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
                   </svg>
                 )}
               </button>
@@ -135,7 +214,9 @@ export default function SignInPage() {
                   type="checkbox"
                   className="w-4 h-4 rounded border-neutral-300 text-black focus:ring-black focus:ring-2 accent-black"
                 />
-                <span className="ml-2 text-sm text-neutral-700">Remember me</span>
+                <span className="ml-2 text-sm text-neutral-700">
+                  Remember me
+                </span>
               </label>
               <Link
                 href="/forgot-password"
@@ -153,8 +234,11 @@ export default function SignInPage() {
 
           {/* Sign Up Link */}
           <p className="mt-6 text-center text-neutral-600">
-            Don't have an account?{' '}
-            <Link href="/signup" className="font-semibold text-black hover:underline">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-black hover:underline"
+            >
               Sign up
             </Link>
           </p>
@@ -165,7 +249,9 @@ export default function SignInPage() {
               <div className="w-full border-t border-neutral-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-neutral-500">Or continue with</span>
+              <span className="px-2 bg-white text-neutral-500">
+                Or continue with
+              </span>
             </div>
           </div>
 
@@ -203,34 +289,71 @@ export default function SignInPage() {
             Secure Legal Management at Your Fingertips
           </h2>
           <p className="text-lg text-neutral-300 mb-8">
-            Join thousands of legal professionals who trust LegalTech for managing their practice efficiently and securely.
+            Join thousands of legal professionals who trust LegalTech for
+            managing their practice efficiently and securely.
           </p>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <svg className="w-6 h-6 text-white mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-6 h-6 text-white mt-1 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <div>
                 <h3 className="font-semibold mb-1">Bank-Level Security</h3>
-                <p className="text-neutral-400 text-sm">Your data is protected with enterprise-grade encryption</p>
+                <p className="text-neutral-400 text-sm">
+                  Your data is protected with enterprise-grade encryption
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <svg className="w-6 h-6 text-white mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-6 h-6 text-white mt-1 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <div>
                 <h3 className="font-semibold mb-1">Compliance Ready</h3>
-                <p className="text-neutral-400 text-sm">Meet all legal industry compliance requirements</p>
+                <p className="text-neutral-400 text-sm">
+                  Meet all legal industry compliance requirements
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <svg className="w-6 h-6 text-white mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-6 h-6 text-white mt-1 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <div>
                 <h3 className="font-semibold mb-1">24/7 Support</h3>
-                <p className="text-neutral-400 text-sm">Always here to help when you need assistance</p>
+                <p className="text-neutral-400 text-sm">
+                  Always here to help when you need assistance
+                </p>
               </div>
             </div>
           </div>
