@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Input from "@/components/ui/Input";
@@ -9,9 +9,43 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { useAuthStore } from "@/store/use-auth-store";
 
 export default function SignInPage() {
   const router = useRouter();
+
+  // useEffect(() => {
+  //   const token = Cookies.get("access_token");
+
+  //   if (token) {
+  //     router.replace("/dashboard");
+  //   }
+  // }, [router]);
+
+  // useEffect(() => {
+  //   Cookies.remove("access_token");
+  // }, []);
+
+  const user = useAuthStore((s) => s.user);
+  const loading = useAuthStore((s) => s.loading);
+  const initialized = useAuthStore((s) => s.initialized);
+
+  console.log(user)
+
+  useEffect(() => {
+    if (!initialized || loading) return;
+
+    if (!user) {
+      router.replace("/signin");
+      return;
+    }
+
+    if (user.org_type === "SOLO") {
+      router.replace("/dashboard/solo");
+    } else if (user.org_type === "FIRM") {
+      router.replace("/dashboard/firm");
+    }
+  }, [initialized, loading, user, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
