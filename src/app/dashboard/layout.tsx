@@ -1,6 +1,6 @@
 import { fetchServer } from "@/lib/api-server";
 import { redirect } from "next/navigation";
-import { DashboardClientInit } from "./client-init";
+import { DashboardClientInit } from "@/app/dashboard/client-init";
 
 export default async function DashboardLayout({
   children,
