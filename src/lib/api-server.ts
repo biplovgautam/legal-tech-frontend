@@ -15,7 +15,12 @@ export async function fetchServer(endpoint: string, options: RequestInit = {}) {
   // Ensure leading slash
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1`;
+  // For Server Components, we want to talk directly to the backend to avoid 
+  // the overhead of a self-request to the Next.js proxy.
+  // We prioritize the BACKEND_URL.
+  const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL 
+    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1` 
+    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1');
 
   const res = await fetch(`${apiUrl}${cleanEndpoint}`, {
     ...options,

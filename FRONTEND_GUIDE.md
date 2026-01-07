@@ -89,3 +89,4 @@ We pass the data deemed "already fetched" by the server directly into the client
 - [ ] **Do not read cookies manually**. Trust the browser and the backend.
 - [ ] **Do not store tokens in local storage**.
 - [ ] When adding a new main layout, remember to implement the **ClientInit** pattern if you need instant access to user data.
+- [ ] **Production Deployment**: Ensure Frontend (`legal-tech.X.com`) and Backend (`api.X.com`) share the same root domain to support First-Party Cookies.

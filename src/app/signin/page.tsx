@@ -83,15 +83,20 @@ export default function SignInPage() {
       if (res.status === 200 || res.status === 201) {
         toast.success(res.data.message || "Login successful");
         
+        // Wait a tiny bit for the cookie to be settled by the browser before router action
+        // This is distinct from router.push; sometimes browser takes a few ms to latch the new Set-Cookie 
+        // especially when going through a proxy
+        await new Promise(r => setTimeout(r, 100));
+
         // Refresh the router to update Server Components with the new cookie
         router.refresh();
 
         if (org_type === "SOLO") {
-          router.push("/dashboard/solo");
+          router.replace("/dashboard/solo");
         } else if (org_type === "FIRM") {
-          router.push("/dashboard/firm");
+          router.replace("/dashboard/firm");
         } else {
-          router.push("/dashboard");
+          router.replace("/dashboard");
         }
       } else {
         toast.error(res.data);
