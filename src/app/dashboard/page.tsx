@@ -12,6 +12,11 @@ export default function DashboardPage() {
   const initialized = useAuthStore((s) => s.initialized);
 
   useEffect(() => {
+    // Force init if stuck uninitialized
+    if (!initialized && !loading) {
+       useAuthStore.getState().init();
+    }
+    
     if (!initialized || loading) return;
 
     if (!user) {

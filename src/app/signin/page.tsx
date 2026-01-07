@@ -6,25 +6,12 @@ import Image from "next/image";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import toast from "react-hot-toast";
-import axios from "axios";
+import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 import { useAuthStore } from "@/store/use-auth-store";
 
 export default function SignInPage() {
   const router = useRouter();
-
-  // useEffect(() => {
-  //   const token = Cookies.get("access_token");
-
-  //   if (token) {
-  //     router.replace("/dashboard");
-  //   }
-  // }, [router]);
-
-  // useEffect(() => {
-  //   Cookies.remove("access_token");
-  // }, []);
 
   const user = useAuthStore((s) => s.user);
   const loading = useAuthStore((s) => s.loading);
@@ -35,15 +22,13 @@ export default function SignInPage() {
   useEffect(() => {
     if (!initialized || loading) return;
 
-    if (!user) {
-      router.replace("/signin");
-      return;
-    }
-
-    if (user.org_type === "SOLO") {
-      router.replace("/dashboard/solo");
-    } else if (user.org_type === "FIRM") {
-      router.replace("/dashboard/firm");
+    // Only redirect if user IS logged in
+    if (user) {
+      if (user.org_type === "SOLO") {
+        router.replace("/dashboard/solo");
+      } else if (user.org_type === "FIRM") {
+        router.replace("/dashboard/firm");
+      }
     }
   }, [initialized, loading, user, router]);
 
@@ -86,31 +71,21 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      const data = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/login`,
-        {
-          email,
-          password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // Using the centralized api client which handles credentials automatically
+      const res = await api.post("/auth/login", {
+        email,
+        password,
+      });
 
-      const { access_token, expires_at, expires_at_http, org_type } = data.data;
+      // Backend now sets the HttpOnly cookie. We don't touch cookies here.
+      const { org_type } = res.data;
 
-      if (data.status === 200 || data.status === 201) {
-        const cok = await Cookies.set("access_token", access_token, {
-          expires: new Date(expires_at_http) || new Date(expires_at / 86400),
-          secure: true,
-          sameSite: "lax",
-        });
+      if (res.status === 200 || res.status === 201) {
+        toast.success(res.data.message || "Login successful");
+        
+        // Refresh the router to update Server Components with the new cookie
+        router.refresh();
 
-        console.log(cok);
-
-        toast.success(data.data.message || "Login successful");
         if (org_type === "SOLO") {
           router.push("/dashboard/solo");
         } else if (org_type === "FIRM") {
@@ -119,12 +94,12 @@ export default function SignInPage() {
           router.push("/dashboard");
         }
       } else {
-        toast.error(data.data);
+        toast.error(res.data);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
 
-      if (axios.isAxiosError(err)) {
+      if (err.response) {
         toast.error(
           err.response?.data?.detail ??
             err.response?.data?.message ??

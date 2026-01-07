@@ -24,8 +24,11 @@ import {
   WorkflowIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
+import api from "@/lib/axios";
+import { useAuthStore } from "@/store/use-auth-store";
+import toast from "react-hot-toast";
 
 interface MenuItem {
   title: string;
@@ -93,6 +96,21 @@ const managementsItem: MenuItem[] = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const logout = useAuthStore((s) => s.logout);
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+      logout(); // Clear client state
+      toast.success("Logged out successfully");
+      router.refresh(); // Clear Next.js cache
+      router.push("/signin");
+    } catch (error) {
+      console.error("Logout failed", error);
+      toast.error("Failed to logout");
+    }
+  };
 
   const isActive = (item: MenuItem) => {
     if (item.url) {
@@ -167,11 +185,9 @@ export default function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <span>
-                <LogOutIcon />
-                <span>Logout</span>
-              </span>
+            <SidebarMenuButton onClick={handleLogout} className="cursor-pointer">
+              <LogOutIcon />
+              <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
