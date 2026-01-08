@@ -7,15 +7,17 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import {  useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 
 function SignUpForm() {
     const [formData, setFormData] = useState({
         lawFirm: false,
         lawyer: false,
+        tarik: false,
         lawFirmName: "",
         lawyerName: "",
+        tarikName: "",
         adminName: "",
         email: "",
         password: "",
@@ -36,9 +38,10 @@ function SignUpForm() {
 
     const [lawFirm, setlawFirm] = useState(role === "lawFirm" ? true : false);
     const [lawyer, setLawyer] = useState(role === "lawyer" ? true : false);
+    const [tarik, setTarik] = useState(role === "tarikguy" ? true : false);
 
     useEffect(() => {
-        if (lawFirm || lawyer) {
+        if (lawFirm || lawyer || tarik) {
             setStep(1);
         }
     }, []);
@@ -123,6 +126,28 @@ function SignUpForm() {
         return Object.keys(newErrors).length === 0;
     };
 
+    const validateTarik = () => {
+        const newErrors: Record<string, string> = {};
+
+        if (!formData.tarikName.trim()) {
+            newErrors.tarikName = "Full name is required";
+        } else if (
+            !/^[A-Za-z]+(?:[ -][A-Za-z]+)*$/.test(formData.tarikName.trim())
+        ) {
+            newErrors.tarikName =
+                "Name may contain only letters, spaces, or hyphens";
+        }
+
+        if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = "Please enter a valid email address";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
@@ -133,44 +158,48 @@ function SignUpForm() {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-       try{
-         e.preventDefault();
+        try {
+            e.preventDefault();
 
-         // final submit
-         if (!validateForm()) return;
-         setIsLoading(true);
+            // final submit
+            if (!validateForm()) return;
+            setIsLoading(true);
 
-         const data = await axios.post(
-           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/register`,
-           {
-             org_type: lawyer ? "solo" : "firm",
-             org_name: formData.lawFirmName || formData.lawyerName,
-             admin_name: formData.adminName || formData.lawyerName,
-             admin_email: formData.email,
-             admin_password: formData.password,
-             confirm_admin_password: formData.confirmPassword,
-           },
-           {
-             headers: {
-               "Content-Type": "application/json",
-             },
-           }
-         );
+            const data = await axios.post(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/register`,
+                {
+                    org_type: lawyer ? "solo" : tarik ? "tarikguy" : "firm",
+                    org_name:
+                        formData.lawFirmName ||
+                        formData.lawyerName ||
+                        formData.tarikName,
+                    admin_name:
+                        formData.adminName ||
+                        formData.lawyerName ||
+                        formData.tarikName,
+                    admin_email: formData.email,
+                    admin_password: formData.password,
+                    confirm_admin_password: formData.confirmPassword,
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-         console.log(data)
+            console.log(data);
 
-         if (data.status === 200 ||  data.status === 201 ) {
-           toast.success(data.data.message);
-           router.push("/signin");
-         }
-       }
-       catch(err){
-        console.log(err);
-        toast.error("Something went wrong")
-       }
-       finally{
-        setIsLoading(false);
-       }
+            if (data.status === 200 || data.status === 201) {
+                toast.success(data.data.message);
+                router.push("/signin");
+            }
+        } catch (err) {
+            console.log(err);
+            toast.error("Something went wrong");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -306,7 +335,7 @@ function SignUpForm() {
                         </Link>
                     </div>
 
-                    {!lawFirm && !lawyer && (
+                    {!lawFirm && !lawyer && !tarik && (
                         <div className="mb-8">
                             <h2 className="text-3xl font-bold text-black mb-2">
                                 Select Your Professional Role
@@ -443,6 +472,59 @@ function SignUpForm() {
                                     </div>
                                 </div>
 
+                                {/* Tarik Option Selection */}
+                                <div className="mb-2">
+                                    <div
+                                        className={`border rounded-lg p-4 min-h-20 cursor-pointer transition-shadow shadow-md flex flex-col gap-2 items-start justify-center bg-white hover:shadow-xl ${
+                                            formData.tarik
+                                                ? "border-black ring-0.5 ring-black"
+                                                : "border-gray-300"
+                                        }`}
+                                        onClick={() => {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                tarik: !prev.tarik,
+                                                lawFirm: prev.tarik
+                                                    ? prev.lawFirm
+                                                    : false,
+                                                lawyer: prev.tarik
+                                                    ? prev.lawyer
+                                                    : false,
+                                            }));
+                                        }}
+                                        style={{ minHeight: 80 }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                id="tarikOption"
+                                                type="checkbox"
+                                                checked={formData.tarik}
+                                                onChange={() => {
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        tarik: !prev.tarik,
+                                                        lawFirm: prev.tarik
+                                                            ? prev.lawFirm
+                                                            : false,
+                                                        lawyer: prev.tarik
+                                                            ? prev.lawyer
+                                                            : false,
+                                                    }));
+                                                }}
+                                                className="accent-black w-5 h-5 rounded border-gray-300 focus:ring-black focus:ring-2"
+                                            />
+                                            <span className="text-lg font-semibold text-black select-none">
+                                                I am a Tarik Guy
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-neutral-600 mt-2 select-none">
+                                            Select this option if you are Tarik.
+                                            Special access and features designed
+                                            for Tarik users.
+                                        </p>
+                                    </div>
+                                </div>
+
                                 {/* Submit Button */}
                                 <Button
                                     type="submit"
@@ -452,9 +534,11 @@ function SignUpForm() {
                                     onClick={() => {
                                         setlawFirm(formData.lawFirm);
                                         setLawyer(formData.lawyer);
+                                        setTarik(formData.tarik);
                                         if (
                                             !formData.lawFirm &&
-                                            !formData.lawyer
+                                            !formData.lawyer &&
+                                            !formData.tarik
                                         ) {
                                             toast.error(
                                                 "Please choose an option to continue."
@@ -489,7 +573,7 @@ function SignUpForm() {
                                     <>
                                         {lawyer ? (
                                             <>
-                                                {/* Law Firm Name Input */}
+                                                {/* Lawyer Name Input */}
                                                 <Input
                                                     label="Lawyer Name"
                                                     type="text"
@@ -498,6 +582,19 @@ function SignUpForm() {
                                                     value={formData.lawyerName}
                                                     onChange={handleChange}
                                                     error={errors.lawyerName}
+                                                />
+                                            </>
+                                        ) : tarik ? (
+                                            <>
+                                                {/* Tarik Name Input */}
+                                                <Input
+                                                    label="Tarik Guy Name"
+                                                    type="text"
+                                                    name="tarikName"
+                                                    placeholder="Enter your name"
+                                                    value={formData.tarikName}
+                                                    onChange={handleChange}
+                                                    error={errors.tarikName}
                                                 />
                                             </>
                                         ) : (
@@ -550,6 +647,11 @@ function SignUpForm() {
                                                         setStep(2);
                                                         setErrors({});
                                                     }
+                                                } else if (tarik) {
+                                                    if (validateTarik()) {
+                                                        setStep(2);
+                                                        setErrors({});
+                                                    }
                                                 } else if (lawFirm) {
                                                     if (validateLawFirm()) {
                                                         setStep(2);
@@ -569,6 +671,7 @@ function SignUpForm() {
                                                 setStep(0);
                                                 setLawyer(false);
                                                 setlawFirm(false);
+                                                setTarik(false);
                                             }}
                                         >
                                             Back
