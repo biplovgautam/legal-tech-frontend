@@ -11,863 +11,787 @@ import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 
 function SignUpForm() {
-    const [formData, setFormData] = useState({
-        lawFirm: false,
-        lawyer: false,
-        tarik: false,
-        lawFirmName: "",
-        lawyerName: "",
-        tarikName: "",
-        adminName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-    });
+  const [formData, setFormData] = useState({
+    lawFirm: false,
+    lawyer: false,
+    tarik: false,
+    lawFirmName: "",
+    lawyerName: "",
+    tarikName: "",
+    adminName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-    const router = useRouter();
-    const searchParams = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-    const role = searchParams.get("role");
+  const role = searchParams.get("role");
 
-    const [errors, setErrors] = useState<Record<string, string>>({});
-    const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [agreedToTerms, setAgreedToTerms] = useState(false);
-    const [step, setStep] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [step, setStep] = useState(0);
 
-    const [lawFirm, setlawFirm] = useState(role === "lawFirm" ? true : false);
-    const [lawyer, setLawyer] = useState(role === "lawyer" ? true : false);
-    const [tarik, setTarik] = useState(role === "tarikguy" ? true : false);
+  const [lawFirm, setlawFirm] = useState(role === "lawFirm" ? true : false);
+  const [lawyer, setLawyer] = useState(role === "lawyer" ? true : false);
+  const [tarik, setTarik] = useState(role === "tarikguy" ? true : false);
 
-    useEffect(() => {
-        if (lawFirm || lawyer || tarik) {
-            setStep(1);
+  useEffect(() => {
+    if (lawFirm || lawyer || tarik) {
+      setStep(1);
+    }
+  }, []);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    } else if (
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(
+        formData.password
+      )
+    ) {
+      newErrors.password =
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character";
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!agreedToTerms) {
+      newErrors.terms = "You must agree to the terms and conditions";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateLawFirm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.lawFirmName.trim()) {
+      newErrors.lawFirmName = "Law Firm name is required";
+    } else if (!/^[A-Za-z0-9&.,'()\- ]{2,100}$/.test(formData.lawFirmName)) {
+      newErrors.lawFirmName =
+        "Name must be 2–100 characters and may include letters, numbers, spaces, and & . , ' ( ) -";
+    }
+
+    if (!formData.adminName.trim()) {
+      newErrors.adminName = "Admin name is required";
+    } else if (!/^[A-Za-z]+(?:[ -][A-Za-z]+)*$/.test(formData.adminName)) {
+      newErrors.adminName =
+        "Admin name may contain only letters, spaces, or hyphens";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateLawyer = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.lawyerName.trim()) {
+      newErrors.lawyerName = "Full name is required";
+    } else if (
+      !/^[A-Za-z]+(?:[ -][A-Za-z]+)*$/.test(formData.lawyerName.trim())
+    ) {
+      newErrors.lawyerName =
+        "Name may contain only letters, spaces, or hyphens";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateTarik = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.tarikName.trim()) {
+      newErrors.tarikName = "Full name is required";
+    } else if (
+      !/^[A-Za-z]+(?:[ -][A-Za-z]+)*$/.test(formData.tarikName.trim())
+    ) {
+      newErrors.tarikName = "Name may contain only letters, spaces, or hyphens";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    try {
+      e.preventDefault();
+
+      // final submit
+      if (!validateForm()) return;
+      setIsLoading(true);
+
+      const data = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/register`,
+        {
+          org_type: lawyer ? "solo" : tarik ? "tarikguy" : "firm",
+          org_name:
+            formData.lawFirmName || formData.lawyerName || formData.tarikName,
+          admin_name:
+            formData.adminName || formData.lawyerName || formData.tarikName,
+          admin_email: formData.email,
+          admin_password: formData.password,
+          confirm_admin_password: formData.confirmPassword,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-    }, []);
+      );
 
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {};
-        if (!formData.password) {
-            newErrors.password = "Password is required";
-        } else if (formData.password.length < 8) {
-            newErrors.password = "Password must be at least 8 characters";
-        } else if (
-            !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(
-                formData.password
-            )
-        ) {
-            newErrors.password =
-                "Password must be at least 8 characters and include uppercase, lowercase, number, and special character";
-        }
+      console.log(data);
 
-        if (!formData.confirmPassword) {
-            newErrors.confirmPassword = "Please confirm your password";
-        } else if (formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = "Passwords do not match";
-        }
+      if (data.status === 200 || data.status === 201) {
+        toast.success(data.data.message);
+        router.push("/signin");
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        if (!agreedToTerms) {
-            newErrors.terms = "You must agree to the terms and conditions";
-        }
+  return (
+    <div className="min-h-screen bg-white flex">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-black text-white flex-col justify-between p-12">
+        <div>
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="Legal Tech Logo"
+              width={40}
+              height={40}
+              className="brightness-0 invert"
+            />
+            <span className="text-2xl font-bold">Legal Tech</span>
+          </Link>
+        </div>
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+        <div className="space-y-8">
+          <h1 className="text-5xl font-bold leading-tight">
+            Start your journey with Legal Tech
+          </h1>
+          <p className="text-xl text-neutral-300">
+            Join thousands of legal professionals who trust our platform to
+            streamline their workflow and enhance productivity.
+          </p>
 
-    const validateLawFirm = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.lawFirmName.trim()) {
-            newErrors.lawFirmName = "Law Firm name is required";
-        } else if (
-            !/^[A-Za-z0-9&.,'()\- ]{2,100}$/.test(formData.lawFirmName)
-        ) {
-            newErrors.lawFirmName =
-                "Name must be 2–100 characters and may include letters, numbers, spaces, and & . , ' ( ) -";
-        }
-
-        if (!formData.adminName.trim()) {
-            newErrors.adminName = "Admin name is required";
-        } else if (!/^[A-Za-z]+(?:[ -][A-Za-z]+)*$/.test(formData.adminName)) {
-            newErrors.adminName =
-                "Admin name may contain only letters, spaces, or hyphens";
-        }
-
-        if (!formData.email.trim()) {
-            newErrors.email = "Email is required";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = "Please enter a valid email address";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const validateLawyer = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.lawyerName.trim()) {
-            newErrors.lawyerName = "Full name is required";
-        } else if (
-            !/^[A-Za-z]+(?:[ -][A-Za-z]+)*$/.test(formData.lawyerName.trim())
-        ) {
-            newErrors.lawyerName =
-                "Name may contain only letters, spaces, or hyphens";
-        }
-
-        if (!formData.email.trim()) {
-            newErrors.email = "Email is required";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = "Please enter a valid email address";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const validateTarik = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.tarikName.trim()) {
-            newErrors.tarikName = "Full name is required";
-        } else if (
-            !/^[A-Za-z]+(?:[ -][A-Za-z]+)*$/.test(formData.tarikName.trim())
-        ) {
-            newErrors.tarikName =
-                "Name may contain only letters, spaces, or hyphens";
-        }
-
-        if (!formData.email.trim()) {
-            newErrors.email = "Email is required";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = "Please enter a valid email address";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: "" }));
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        try {
-            e.preventDefault();
-
-            // final submit
-            if (!validateForm()) return;
-            setIsLoading(true);
-
-            const data = await axios.post(
-                `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/register`,
-                {
-                    org_type: lawyer ? "solo" : tarik ? "tarikguy" : "firm",
-                    org_name:
-                        formData.lawFirmName ||
-                        formData.lawyerName ||
-                        formData.tarikName,
-                    admin_name:
-                        formData.adminName ||
-                        formData.lawyerName ||
-                        formData.tarikName,
-                    admin_email: formData.email,
-                    admin_password: formData.password,
-                    confirm_admin_password: formData.confirmPassword,
-                },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            console.log(data);
-
-            if (data.status === 200 || data.status === 201) {
-                toast.success(data.data.message);
-                router.push("/signin");
-            }
-        } catch (err) {
-            console.log(err);
-            toast.error("Something went wrong");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-white flex">
-            {/* Left Side - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-black text-white flex-col justify-between p-12">
-                <div>
-                    <Link href="/" className="flex items-center gap-3">
-                        <Image
-                            src="/logo.png"
-                            alt="Legal Tech Logo"
-                            width={40}
-                            height={40}
-                            className="brightness-0 invert"
-                        />
-                        <span className="text-2xl font-bold">Legal Tech</span>
-                    </Link>
-                </div>
-
-                <div className="space-y-8">
-                    <h1 className="text-5xl font-bold leading-tight">
-                        Start your journey with Legal Tech
-                    </h1>
-                    <p className="text-xl text-neutral-300">
-                        Join thousands of legal professionals who trust our
-                        platform to streamline their workflow and enhance
-                        productivity.
-                    </p>
-
-                    <div className="space-y-4 pt-8">
-                        <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                                <svg
-                                    className="w-6 h-6 text-black"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold">
-                                    Advanced Analytics
-                                </h3>
-                                <p className="text-neutral-400">
-                                    Track and analyze your legal cases with
-                                    powerful insights
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                                <svg
-                                    className="w-6 h-6 text-black"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold">
-                                    Enterprise Security
-                                </h3>
-                                <p className="text-neutral-400">
-                                    Bank-level encryption to keep your data safe
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-4">
-                            <div className="shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                                <svg
-                                    className="w-6 h-6 text-black"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold">
-                                    Lightning Fast
-                                </h3>
-                                <p className="text-neutral-400">
-                                    Optimized performance for seamless
-                                    experience
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="text-sm text-neutral-400">
-                    © 2025 Legal Tech. All rights reserved.
-                </div>
+          <div className="space-y-4 pt-8">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Advanced Analytics</h3>
+                <p className="text-neutral-400">
+                  Track and analyze your legal cases with powerful insights
+                </p>
+              </div>
             </div>
 
-            {/* Right Side - Sign Up Form */}
-            <div className="flex-1 flex items-center justify-center p-8">
-                <div className="w-full max-w-md">
-                    {/* Mobile Logo */}
-                    <div className="lg:hidden mb-8 flex justify-center">
-                        <Link href="/" className="flex items-center gap-3">
-                            <Image
-                                src="/logo.png"
-                                alt="Legal Tech Logo"
-                                width={40}
-                                height={40}
-                            />
-                            <span className="text-2xl font-bold text-black">
-                                Legal Tech
-                            </span>
-                        </Link>
-                    </div>
+            <div className="flex items-start gap-4">
+              <div className="shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Enterprise Security</h3>
+                <p className="text-neutral-400">
+                  Bank-level encryption to keep your data safe
+                </p>
+              </div>
+            </div>
 
-                    {!lawFirm && !lawyer && !tarik && (
-                        <div className="mb-8">
-                            <h2 className="text-3xl font-bold text-black mb-2">
-                                Select Your Professional Role
-                            </h2>
-                            <p className="text-neutral-600">
-                                Already have an account?{" "}
-                                <Link
-                                    href="/signin"
-                                    className="font-medium text-black hover:underline"
-                                >
-                                    Sign in
-                                </Link>
-                            </p>
-                        </div>
-                    )}
+            <div className="flex items-start gap-4">
+              <div className="shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Lightning Fast</h3>
+                <p className="text-neutral-400">
+                  Optimized performance for seamless experience
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Law Firm Option Selection */}
-                        {step === 0 && (
-                            <>
-                                <div className="mb-2">
-                                    {/* <label
+        <div className="text-sm text-neutral-400">
+          © 2025 Legal Tech. All rights reserved.
+        </div>
+      </div>
+
+      {/* Right Side - Sign Up Form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-8 flex justify-center">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt="Legal Tech Logo"
+                width={40}
+                height={40}
+              />
+              <span className="text-2xl font-bold text-black">Legal Tech</span>
+            </Link>
+          </div>
+
+          {!lawFirm && !lawyer && !tarik && (
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-black mb-2">
+                Select Your Professional Role
+              </h2>
+              <p className="text-neutral-600">
+                Already have an account?{" "}
+                <Link
+                  href="/signin"
+                  className="font-medium text-black hover:underline"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Law Firm Option Selection */}
+            {step === 0 && (
+              <>
+                <div className="mb-2">
+                  {/* <label
                                 htmlFor="lawFirmOption"
                                 className="block text-lg font-semibold text-black mb-1"
                             >
                                 Law Firm
                             </label> */}
-                                    <div
-                                        className={`border rounded-lg p-4 min-h-20 cursor-pointer transition-shadow shadow-md flex flex-col gap-2 items-start justify-center bg-white hover:shadow-xl ${
-                                            formData.lawFirm
-                                                ? "border-black ring-0.5 ring-black"
-                                                : "border-gray-300"
-                                        }`}
-                                        onClick={() => {
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                lawFirm: !prev.lawFirm,
-                                                lawyer: prev.lawFirm
-                                                    ? prev.lawyer
-                                                    : false,
-                                            }));
-                                        }}
-                                        style={{ minHeight: 80 }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                id="lawFirmOption"
-                                                type="checkbox"
-                                                checked={formData.lawFirm}
-                                                onChange={() => {
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        lawFirm: !prev.lawFirm,
-                                                        lawyer: prev.lawFirm
-                                                            ? prev.lawyer
-                                                            : false,
-                                                    }));
-                                                }}
-                                                className="accent-black w-5 h-5 rounded border-gray-300 focus:ring-black-500 focus:ring-2"
-                                            />
-                                            <span className="text-lg font-semibold text-black select-none">
-                                                I represent a Law Firm
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-neutral-600 mt-2 select-none">
-                                            Select this option if you are
-                                            signing up on behalf of a law firm.
-                                            You’ll get access to firm management
-                                            features, team collaboration, and
-                                            more.
-                                        </p>
-                                    </div>
-                                </div>
-                                {/* Lawyer Option Selection */}
-                                <div className="mb-2">
-                                    {/* <label
+                  <div
+                    className={`border rounded-lg p-4 min-h-20 cursor-pointer transition-shadow shadow-md flex flex-col gap-2 items-start justify-center bg-white hover:shadow-xl ${
+                      formData.lawFirm
+                        ? "border-black ring-0.5 ring-black"
+                        : "border-gray-300"
+                    }`}
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        lawFirm: true,
+                        lawyer: false,
+                        tarik: false,
+                      }));
+                    }}
+                    style={{ minHeight: 80 }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="lawFirmOption"
+                        type="checkbox"
+                        checked={formData.lawFirm}
+                        onChange={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            lawFirm: true,
+                            lawyer: false,
+                            tarik: false,
+                          }));
+                        }}
+                        className="accent-black w-5 h-5 rounded border-gray-300 focus:ring-black-500 focus:ring-2"
+                      />
+                      <span className="text-lg font-semibold text-black select-none">
+                        I represent a Law Firm
+                      </span>
+                    </div>
+                    <p className="text-sm text-neutral-600 mt-2 select-none">
+                      Select this option if you are signing up on behalf of a
+                      law firm. You’ll get access to firm management features,
+                      team collaboration, and more.
+                    </p>
+                  </div>
+                </div>
+                {/* Lawyer Option Selection */}
+                <div className="mb-2">
+                  {/* <label
                                 htmlFor="lawyerOption"
                                 className="block text-lg font-semibold text-black mb-1"
                             >
                                 Lawyer
                             </label> */}
-                                    <div
-                                        className={`border rounded-lg p-4 min-h-20 cursor-pointer transition-shadow shadow-md flex flex-col gap-2 items-start justify-center bg-white hover:shadow-xl ${
-                                            formData.lawyer
-                                                ? "border-black ring-0.5 ring-black"
-                                                : "border-gray-300"
-                                        }`}
-                                        onClick={() => {
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                lawyer: !prev.lawyer,
-                                                lawFirm: prev.lawyer
-                                                    ? prev.lawFirm
-                                                    : false,
-                                            }));
-                                        }}
-                                        style={{ minHeight: 80 }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                id="lawyerOption"
-                                                type="checkbox"
-                                                checked={formData.lawyer}
-                                                onChange={() => {
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        lawyer: !prev.lawyer,
-                                                        lawFirm: prev.lawyer
-                                                            ? prev.lawFirm
-                                                            : false,
-                                                    }));
-                                                }}
-                                                className="accent-black w-5 h-5 rounded border-gray-300 focus:ring-black focus:ring-2"
-                                                onClick={() => {
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        lawyer: !prev.lawyer,
-                                                        lawFirm: prev.lawyer
-                                                            ? prev.lawFirm
-                                                            : false,
-                                                    }));
-                                                }}
-                                            />
-                                            <span className="text-lg font-semibold text-black select-none">
-                                                I am a Lawyer
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-neutral-600 mt-2 select-none">
-                                            Select this option if you are an
-                                            individual lawyer. You’ll get access
-                                            to personal case management, legal
-                                            resources, and more.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Tarik Option Selection */}
-                                <div className="mb-2">
-                                    <div
-                                        className={`border rounded-lg p-4 min-h-20 cursor-pointer transition-shadow shadow-md flex flex-col gap-2 items-start justify-center bg-white hover:shadow-xl ${
-                                            formData.tarik
-                                                ? "border-black ring-0.5 ring-black"
-                                                : "border-gray-300"
-                                        }`}
-                                        onClick={() => {
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                tarik: !prev.tarik,
-                                                lawFirm: prev.tarik
-                                                    ? prev.lawFirm
-                                                    : false,
-                                                lawyer: prev.tarik
-                                                    ? prev.lawyer
-                                                    : false,
-                                            }));
-                                        }}
-                                        style={{ minHeight: 80 }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                id="tarikOption"
-                                                type="checkbox"
-                                                checked={formData.tarik}
-                                                onChange={() => {
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        tarik: !prev.tarik,
-                                                        lawFirm: prev.tarik
-                                                            ? prev.lawFirm
-                                                            : false,
-                                                        lawyer: prev.tarik
-                                                            ? prev.lawyer
-                                                            : false,
-                                                    }));
-                                                }}
-                                                className="accent-black w-5 h-5 rounded border-gray-300 focus:ring-black focus:ring-2"
-                                            />
-                                            <span className="text-lg font-semibold text-black select-none">
-                                                I am a Tarik Guy
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-neutral-600 mt-2 select-none">
-                                            Select this option if you are Tarik.
-                                            Special access and features designed
-                                            for Tarik users.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Submit Button */}
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    className="w-full mt-4 cursor-pointer"
-                                    isLoading={isLoading}
-                                    onClick={() => {
-                                        setlawFirm(formData.lawFirm);
-                                        setLawyer(formData.lawyer);
-                                        setTarik(formData.tarik);
-                                        if (
-                                            !formData.lawFirm &&
-                                            !formData.lawyer &&
-                                            !formData.tarik
-                                        ) {
-                                            toast.error(
-                                                "Please choose an option to continue."
-                                            );
-                                            return;
-                                        }
-                                        setStep(1);
-                                    }}
-                                >
-                                    Continue
-                                </Button>
-                            </>
-                        )}
-                        {step !== 0 && (
-                            <>
-                                <div className="mb-8">
-                                    <h2 className="text-3xl font-bold text-black mb-2">
-                                        Create an account
-                                    </h2>
-                                    <p className="text-neutral-600">
-                                        Already have an account?{" "}
-                                        <Link
-                                            href="/signin"
-                                            className="font-medium text-black hover:underline"
-                                        >
-                                            Sign in
-                                        </Link>
-                                    </p>
-                                </div>
-
-                                {step === 1 && (
-                                    <>
-                                        {lawyer ? (
-                                            <>
-                                                {/* Lawyer Name Input */}
-                                                <Input
-                                                    label="Lawyer Name"
-                                                    type="text"
-                                                    name="lawyerName"
-                                                    placeholder="John Doe"
-                                                    value={formData.lawyerName}
-                                                    onChange={handleChange}
-                                                    error={errors.lawyerName}
-                                                />
-                                            </>
-                                        ) : tarik ? (
-                                            <>
-                                                {/* Tarik Name Input */}
-                                                <Input
-                                                    label="Tarik Guy Name"
-                                                    type="text"
-                                                    name="tarikName"
-                                                    placeholder="Enter your name"
-                                                    value={formData.tarikName}
-                                                    onChange={handleChange}
-                                                    error={errors.tarikName}
-                                                />
-                                            </>
-                                        ) : (
-                                            <>
-                                                {/* Law Firm Name Input */}
-                                                <Input
-                                                    label="Law Firm Name"
-                                                    type="text"
-                                                    name="lawFirmName"
-                                                    placeholder="John Doe"
-                                                    value={formData.lawFirmName}
-                                                    onChange={handleChange}
-                                                    error={errors.lawFirmName}
-                                                />
-
-                                                {/* Admin Name Input */}
-                                                <Input
-                                                    label="Admin Name"
-                                                    type="text"
-                                                    name="adminName"
-                                                    placeholder="John Doe"
-                                                    value={formData.adminName}
-                                                    onChange={handleChange}
-                                                    error={errors.adminName}
-                                                />
-                                            </>
-                                        )}
-
-                                        {/* Email Input */}
-                                        <Input
-                                            label="Email"
-                                            type="email"
-                                            name="email"
-                                            placeholder="you@example.com"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            error={errors.email}
-                                        />
-
-                                        <Button
-                                            type="button"
-                                            variant="primary"
-                                            className="w-full cursor-pointer"
-                                            isLoading={isLoading}
-                                            onClick={() => {
-                                                console.log(`step : ${step}`);
-
-                                                if (lawyer) {
-                                                    if (validateLawyer()) {
-                                                        setStep(2);
-                                                        setErrors({});
-                                                    }
-                                                } else if (tarik) {
-                                                    if (validateTarik()) {
-                                                        setStep(2);
-                                                        setErrors({});
-                                                    }
-                                                } else if (lawFirm) {
-                                                    if (validateLawFirm()) {
-                                                        setStep(2);
-                                                        setErrors({});
-                                                    }
-                                                }
-                                            }}
-                                            disabled={isLoading}
-                                        >
-                                            Next Step
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            className="w-full cursor-pointer"
-                                            onClick={() => {
-                                                setStep(0);
-                                                setLawyer(false);
-                                                setlawFirm(false);
-                                                setTarik(false);
-                                            }}
-                                        >
-                                            Back
-                                        </Button>
-
-                                        {/* Divider and Social Login remain always visible */}
-                                        <div className="mt-8 relative">
-                                            <div className="absolute inset-0 flex items-center">
-                                                <div className="w-full border-t border-neutral-300"></div>
-                                            </div>
-                                            <div className="relative flex justify-center text-sm">
-                                                <span className="px-2 bg-white text-neutral-500">
-                                                    Or continue with
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Social Login Button */}
-                                        <div className="mt-6">
-                                            <button
-                                                type="button"
-                                                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors duration-200 text-neutral-900"
-                                            >
-                                                <svg
-                                                    className="w-5 h-5"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        fill="#4285F4"
-                                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                                                    />
-                                                    <path
-                                                        fill="#34A853"
-                                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                                                    />
-                                                    <path
-                                                        fill="#FBBC05"
-                                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                                                    />
-                                                    <path
-                                                        fill="#EA4335"
-                                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                                                    />
-                                                </svg>
-                                                <span className="text-sm font-medium cursor-pointer">
-                                                    Continue with Google
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                                {step === 2 && (
-                                    <>
-                                        {/* Password Input */}
-                                        <div className="relative">
-                                            <Input
-                                                label="Password"
-                                                type={
-                                                    showPassword
-                                                        ? "text"
-                                                        : "password"
-                                                }
-                                                name="password"
-                                                placeholder="Enter password"
-                                                value={formData.password}
-                                                onChange={handleChange}
-                                                error={errors.password}
-                                                className="pr-12"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setShowPassword(
-                                                        (prev) => !prev
-                                                    )
-                                                }
-                                                className="absolute top-10 right-3 text-neutral-500 hover:text-black transition-colors"
-                                            >
-                                                {showPassword ? (
-                                                    <EyeIcon />
-                                                ) : (
-                                                    <EyeOffIcon />
-                                                )}
-                                            </button>
-                                        </div>
-
-                                        {/* Confirm Password Input */}
-                                        <div className="relative">
-                                            <Input
-                                                label="Confirm Password"
-                                                type={
-                                                    showPassword
-                                                        ? "text"
-                                                        : "password"
-                                                }
-                                                name="confirmPassword"
-                                                placeholder="Confirm password"
-                                                value={formData.confirmPassword}
-                                                onChange={handleChange}
-                                                error={errors.confirmPassword}
-                                                className="pr-12"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setShowPassword(
-                                                        (prev) => !prev
-                                                    )
-                                                }
-                                                className="absolute top-10 right-3 text-neutral-500 hover:text-black transition-colors"
-                                            >
-                                                {showPassword ? (
-                                                    <EyeIcon />
-                                                ) : (
-                                                    <EyeOffIcon />
-                                                )}
-                                            </button>
-                                        </div>
-
-                                        {/* Terms and Conditions */}
-                                        <div>
-                                            <label className="flex items-start">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={agreedToTerms}
-                                                    onChange={(e) => {
-                                                        setAgreedToTerms(
-                                                            e.target.checked
-                                                        );
-                                                        if (errors.terms) {
-                                                            setErrors(
-                                                                (prev) => ({
-                                                                    ...prev,
-                                                                    terms: "",
-                                                                })
-                                                            );
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 mt-1 rounded border-neutral-300 text-black focus:ring-black focus:ring-2 accent-black"
-                                                />
-                                                <span className="ml-2 text-sm text-neutral-700">
-                                                    I agree to the{" "}
-                                                    <Link
-                                                        href="/terms"
-                                                        className="font-medium text-black hover:underline"
-                                                    >
-                                                        Terms and Conditions
-                                                    </Link>{" "}
-                                                    and{" "}
-                                                    <Link
-                                                        href="/privacy"
-                                                        className="font-medium text-black hover:underline"
-                                                    >
-                                                        Privacy Policy
-                                                    </Link>
-                                                </span>
-                                            </label>
-                                            {errors.terms && (
-                                                <p className="mt-1 text-sm text-red-600">
-                                                    {errors.terms}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <Button
-                                            type="submit"
-                                            variant="primary"
-                                            className="w-full cursor-pointer"
-                                            onClick={() => validateForm()}
-                                            isLoading={isLoading}
-                                        >
-                                            Create Account
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            className="w-full cursor-pointer"
-                                            onClick={() => setStep(1)}
-                                        >
-                                            Back
-                                        </Button>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </form>
+                  <div
+                    className={`border rounded-lg p-4 min-h-20 cursor-pointer transition-shadow shadow-md flex flex-col gap-2 items-start justify-center bg-white hover:shadow-xl ${
+                      formData.lawyer
+                        ? "border-black ring-0.5 ring-black"
+                        : "border-gray-300"
+                    }`}
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        lawyer: true,
+                        lawFirm: false,
+                        tarik: false,
+                      }));
+                    }}
+                    style={{ minHeight: 80 }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="lawyerOption"
+                        type="checkbox"
+                        checked={formData.lawyer}
+                        onChange={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            lawyer: true,
+                            lawFirm: false,
+                            tarik: false,
+                          }));
+                        }}
+                        className="accent-black w-5 h-5 rounded border-gray-300 focus:ring-black focus:ring-2"
+                      />
+                      <span className="text-lg font-semibold text-black select-none">
+                        I am a Lawyer
+                      </span>
+                    </div>
+                    <p className="text-sm text-neutral-600 mt-2 select-none">
+                      Select this option if you are an individual lawyer. You’ll
+                      get access to personal case management, legal resources,
+                      and more.
+                    </p>
+                  </div>
                 </div>
-            </div>
+
+                {/* Tarik Option Selection */}
+                <div className="mb-2">
+                  <div
+                    className={`border rounded-lg p-4 min-h-20 cursor-pointer transition-shadow shadow-md flex flex-col gap-2 items-start justify-center bg-white hover:shadow-xl ${
+                      formData.tarik
+                        ? "border-black ring-0.5 ring-black"
+                        : "border-gray-300"
+                    }`}
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        tarik: true,
+                        lawFirm: false,
+                        lawyer: false,
+                      }));
+                    }}
+                    style={{ minHeight: 80 }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="tarikOption"
+                        type="checkbox"
+                        checked={formData.tarik}
+                        onChange={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            tarik: true,
+                            lawFirm: false,
+                            lawyer: false,
+                          }));
+                        }}
+                        className="accent-black w-5 h-5 rounded border-gray-300 focus:ring-black focus:ring-2"
+                      />
+                      <span className="text-lg font-semibold text-black select-none">
+                        I am a Tarik Guy
+                      </span>
+                    </div>
+                    <p className="text-sm text-neutral-600 mt-2 select-none">
+                      Select this option if you are Tarik. Special access and
+                      features designed for Tarik users.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-full mt-4 cursor-pointer"
+                  isLoading={isLoading}
+                  onClick={() => {
+                    setlawFirm(formData.lawFirm);
+                    setLawyer(formData.lawyer);
+                    setTarik(formData.tarik);
+                    if (
+                      !formData.lawFirm &&
+                      !formData.lawyer &&
+                      !formData.tarik
+                    ) {
+                      toast.error("Please choose an option to continue.");
+                      return;
+                    }
+                    setStep(1);
+                  }}
+                >
+                  Continue
+                </Button>
+              </>
+            )}
+            {step !== 0 && (
+              <>
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-black mb-2">
+                    Create an account
+                  </h2>
+                  <p className="text-neutral-600">
+                    Already have an account?{" "}
+                    <Link
+                      href="/signin"
+                      className="font-medium text-black hover:underline"
+                    >
+                      Sign in
+                    </Link>
+                  </p>
+                </div>
+
+                {step === 1 && (
+                  <>
+                    {lawyer ? (
+                      <>
+                        {/* Lawyer Name Input */}
+                        <Input
+                          label="Lawyer Name"
+                          type="text"
+                          name="lawyerName"
+                          placeholder="John Doe"
+                          value={formData.lawyerName}
+                          onChange={handleChange}
+                          error={errors.lawyerName}
+                        />
+                      </>
+                    ) : tarik ? (
+                      <>
+                        {/* Tarik Name Input */}
+                        <Input
+                          label="Tarik Guy Name"
+                          type="text"
+                          name="tarikName"
+                          placeholder="Enter your name"
+                          value={formData.tarikName}
+                          onChange={handleChange}
+                          error={errors.tarikName}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        {/* Law Firm Name Input */}
+                        <Input
+                          label="Law Firm Name"
+                          type="text"
+                          name="lawFirmName"
+                          placeholder="John Doe"
+                          value={formData.lawFirmName}
+                          onChange={handleChange}
+                          error={errors.lawFirmName}
+                        />
+
+                        {/* Admin Name Input */}
+                        <Input
+                          label="Admin Name"
+                          type="text"
+                          name="adminName"
+                          placeholder="John Doe"
+                          value={formData.adminName}
+                          onChange={handleChange}
+                          error={errors.adminName}
+                        />
+                      </>
+                    )}
+
+                    {/* Email Input */}
+                    <Input
+                      label="Email"
+                      type="email"
+                      name="email"
+                      placeholder="you@example.com"
+                      value={formData.email}
+                      onChange={handleChange}
+                      error={errors.email}
+                    />
+
+                    <Button
+                      type="button"
+                      variant="primary"
+                      className="w-full cursor-pointer"
+                      isLoading={isLoading}
+                      onClick={() => {
+                        console.log(`step : ${step}`);
+
+                        if (lawyer) {
+                          if (validateLawyer()) {
+                            setStep(2);
+                            setErrors({});
+                          }
+                        } else if (tarik) {
+                          if (validateTarik()) {
+                            setStep(2);
+                            setErrors({});
+                          }
+                        } else if (lawFirm) {
+                          if (validateLawFirm()) {
+                            setStep(2);
+                            setErrors({});
+                          }
+                        }
+                      }}
+                      disabled={isLoading}
+                    >
+                      Next Step
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="w-full cursor-pointer"
+                      onClick={() => {
+                        setStep(0);
+                        setLawyer(false);
+                        setlawFirm(false);
+                        setTarik(false);
+                      }}
+                    >
+                      Back
+                    </Button>
+
+                    {/* Divider and Social Login remain always visible */}
+                    <div className="mt-8 relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-neutral-300"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-neutral-500">
+                          Or continue with
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Social Login Button */}
+                    <div className="mt-6">
+                      <button
+                        type="button"
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors duration-200 text-neutral-900"
+                      >
+                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                          <path
+                            fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                          />
+                        </svg>
+                        <span className="text-sm font-medium cursor-pointer">
+                          Continue with Google
+                        </span>
+                      </button>
+                    </div>
+                  </>
+                )}
+                {step === 2 && (
+                  <>
+                    {/* Password Input */}
+                    <div className="relative">
+                      <Input
+                        label="Password"
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        placeholder="Enter password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        error={errors.password}
+                        className="pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute top-10 right-3 text-neutral-500 hover:text-black transition-colors"
+                      >
+                        {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+                      </button>
+                    </div>
+
+                    {/* Confirm Password Input */}
+                    <div className="relative">
+                      <Input
+                        label="Confirm Password"
+                        type={showPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        placeholder="Confirm password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        error={errors.confirmPassword}
+                        className="pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute top-10 right-3 text-neutral-500 hover:text-black transition-colors"
+                      >
+                        {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+                      </button>
+                    </div>
+
+                    {/* Terms and Conditions */}
+                    <div>
+                      <label className="flex items-start">
+                        <input
+                          type="checkbox"
+                          checked={agreedToTerms}
+                          onChange={(e) => {
+                            setAgreedToTerms(e.target.checked);
+                            if (errors.terms) {
+                              setErrors((prev) => ({
+                                ...prev,
+                                terms: "",
+                              }));
+                            }
+                          }}
+                          className="w-4 h-4 mt-1 rounded border-neutral-300 text-black focus:ring-black focus:ring-2 accent-black"
+                        />
+                        <span className="ml-2 text-sm text-neutral-700">
+                          I agree to the{" "}
+                          <Link
+                            href="/terms"
+                            className="font-medium text-black hover:underline"
+                          >
+                            Terms and Conditions
+                          </Link>{" "}
+                          and{" "}
+                          <Link
+                            href="/privacy"
+                            className="font-medium text-black hover:underline"
+                          >
+                            Privacy Policy
+                          </Link>
+                        </span>
+                      </label>
+                      {errors.terms && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.terms}
+                        </p>
+                      )}
+                    </div>
+
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      className="w-full cursor-pointer"
+                      onClick={() => validateForm()}
+                      isLoading={isLoading}
+                    >
+                      Create Account
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="w-full cursor-pointer"
+                      onClick={() => setStep(1)}
+                    >
+                      Back
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
+          </form>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default function SignUpPage() {
-    return (
-        <Suspense fallback="">
-            <SignUpForm />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback="">
+      <SignUpForm />
+    </Suspense>
+  );
 }
