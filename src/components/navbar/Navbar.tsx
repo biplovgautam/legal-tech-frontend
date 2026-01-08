@@ -45,6 +45,11 @@ export default function Navbar() {
       href: "/signup?role=lawFirm",
       description: "Ideal for teams and firms",
     },
+     {
+      label: "Try as Tarik Guy",
+      href: "/signup?role=tarikguy",
+      description: "Special access for Tarik users",
+    },
   ];
 
   // Mobile menu items
