@@ -165,14 +165,23 @@ function SignUpForm() {
       const data = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/register`,
         {
-          org_type: lawyer ? "solo" : tarik ? "tarikguy" : "firm",
-          org_name:
-            formData.lawFirmName || formData.lawyerName || formData.tarikName,
-          admin_name:
-            formData.adminName || formData.lawyerName || formData.tarikName,
-          admin_email: formData.email,
-          admin_password: formData.password,
-          confirm_admin_password: formData.confirmPassword,
+          // Booleans to identify the user type
+          law_firm: lawFirm,
+          lawyer: lawyer,
+          tarik: tarik,
+
+          // Name fields - sending empty strings for those not relevant to the selected type
+          law_firm_name: lawFirm ? formData.lawFirmName : "",
+          lawyer_name: lawyer ? formData.lawyerName : "",
+          tarik_name: tarik ? formData.tarikName : "",
+          
+          // admin_name is specific to Law Firm admins
+          admin_name: lawFirm ? formData.adminName : "", 
+
+          // Common credentials
+          email: formData.email,
+          password: formData.password,
+          confirm_password: formData.confirmPassword,
         },
         {
           headers: {

@@ -90,3 +90,45 @@ We pass the data deemed "already fetched" by the server directly into the client
 - [ ] **Do not store tokens in local storage**.
 - [ ] When adding a new main layout, remember to implement the **ClientInit** pattern if you need instant access to user data.
 - [ ] **Production Deployment**: Ensure Frontend (`legal-tech.X.com`) and Backend (`api.X.com`) share the same root domain to support First-Party Cookies.
+
+---
+
+## 6. API Schemas & Payloads
+
+### Signup Payload (`/auth/register`)
+
+The backend expects a **flat structure** using booleans to distinguish user roles. Do not nest data.
+
+**Schema:**
+```json
+{
+  "law_firm": boolean,      // Set true for Law Firm Admin
+  "lawyer": boolean,        // Set true for Solo Lawyer
+  "tarik": boolean,         // Set true for Tarik Guy
+
+  "law_firm_name": string,  // Required if law_firm=true
+  "lawyer_name": string,    // Required if lawyer=true
+  "tarik_name": string,     // Required if tarik=true
+  "admin_name": string,     // Required if law_firm=true (Name of the Admin User)
+
+  "email": string,          // Unique Email Address
+  "password": string,       // Plain text password
+  "confirm_password": string // Must match password
+}
+```
+
+**Example (Law Firm Signup):**
+```json
+{
+  "law_firm": true,
+  "lawyer": false,
+  "tarik": false,
+  "law_firm_name": "Pearson Specter Litt",
+  "lawyer_name": "",
+  "tarik_name": "",
+  "admin_name": "Harvey Specter",
+  "email": "harvey@psl.com",
+  "password": "pass",
+  "confirm_password": "pass"
+}
+```
