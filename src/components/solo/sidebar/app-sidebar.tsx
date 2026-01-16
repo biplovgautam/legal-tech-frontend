@@ -22,6 +22,7 @@ import {
   ScaleIcon,
   UsersIcon,
   WorkflowIcon,
+  ArrowRightLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -29,6 +30,8 @@ import type { LucideIcon } from "lucide-react";
 import api from "@/lib/axios";
 import { useAuthStore } from "@/store/use-auth-store";
 import toast from "react-hot-toast";
+
+import LogoutButton from "@/components/ui/LogoutButton";
 
 interface MenuItem {
   title: string;
@@ -97,20 +100,37 @@ const managementsItem: MenuItem[] = [
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const logout = useAuthStore((s) => s.logout);
+  // const logout = useAuthStore((s) => s.logout);
+  const user = useAuthStore((s) => s.user);
 
-  const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout");
-      logout(); // Clear client state
-      toast.success("Logged out successfully");
-      router.refresh(); // Clear Next.js cache
-      router.push("/signin");
-    } catch (error) {
-      console.error("Logout failed", error);
-      toast.error("Failed to logout");
+  const canSwitch =
+    user?.org_type === "FIRM" &&
+    user?.user_roles?.includes("FIRM_ADMIN") &&
+    (user?.user_roles?.includes("FIRM_LAWYER") ||
+      user?.user_roles?.includes("LAWYER"));
+
+  const handleSwitch = () => {
+    if (pathname.includes("/firm/admin")) {
+      router.push("/dashboard/firm/lawyer");
+      toast.success("Switched to Lawyer View");
+    } else {
+      router.push("/dashboard/firm/admin");
+      toast.success("Switched to Admin View");
     }
   };
+
+  // const handleLogout = async () => {
+  //   try {
+  //     await api.post("/auth/logout");
+  //     logout(); // Clear client state
+  //     toast.success("Logged out successfully");
+  //     router.refresh(); // Clear Next.js cache
+  //     router.push("/signin");
+  //   } catch (error) {
+  //     console.error("Logout failed", error);
+  //     toast.error("Failed to logout");
+  //   }
+  // };
 
   const isActive = (item: MenuItem) => {
     if (item.url) {
@@ -184,11 +204,16 @@ export default function AppSidebar() {
 
       <SidebarFooter>
         <SidebarMenu>
+          {canSwitch && (
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={handleSwitch} className="cursor-pointer">
+                <ArrowRightLeft />
+                <span>Switch View</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="cursor-pointer">
-              <LogOutIcon />
-              <span>Logout</span>
-            </SidebarMenuButton>
+            <LogoutButton />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

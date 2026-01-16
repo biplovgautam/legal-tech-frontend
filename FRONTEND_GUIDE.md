@@ -1,3 +1,68 @@
+# Frontend API Guide: `/users/me`
+
+This document serves as the reference for using the `/users/me` endpoint to bootstrap the user session, handle routing, and manage permissions on the frontend.
+
+## 1. Request
+
+The frontend should call the `/users/me` endpoint to retrieve the current user's information and permissions.
+
+### Example Call
+
+```typescript
+import { fetchServer } from "@/lib/api-server";
+
+const user = await fetchServer('/users/me');
+```
+
+## 2. Response Schema
+
+```json
+{
+  "id": 101,
+  "user_name": "Harvey Specter",
+  "user_email": "harvey@pearson.com",
+  
+  // Organization Context
+  "org_id": 50,
+  "org_name": "Pearson Specter Litt",
+  "org_type": "FIRM", // or "SOLO", depending on the user role
+
+  // Roles and Permissions
+  "user_roles": [
+    "admin", // or "lawyer", "assistant", "tarik"
+    "viewer"
+  ],
+
+  // Timestamps
+  "created_at": "2023-01-01T12:00:00Z",
+  "updated_at": "2023-01-10T12:00:00Z"
+}
+```
+
+### Fields
+
+- `id`: Unique identifier for the user.
+- `user_name`: The display name of the user.
+- `user_email`: The email address of the user.
+- `org_id`: The unique identifier of the organization the user belongs to.
+- `org_name`: The name of the organization.
+- `org_type`: The type of organization (e.g., FIRM, SOLO).
+- `user_roles`: An array of roles assigned to the user, determining their permissions.
+- `created_at`: The timestamp when the user was created.
+- `updated_at`: The timestamp when the user was last updated.
+
+## 3. Usage
+
+### A. Routing
+
+The response from `/users/me` can be used to determine the appropriate dashboard or page to redirect the user after login.
+
+### B. Permissions
+
+Frontend components can check the `user_roles` array to conditionally render UI elements or pages based on the user's permissions.
+
+---
+
 # Frontend Authentication & State Management Guide
 
 This guide documents the architecture for authentication, state management, and backend communication in the Legal Tech Frontend.
@@ -19,7 +84,7 @@ We have moved away from manual client-side cookie management to a secure, **Serv
 
 We have two distinct ways of talking to the backend, depending on where the code runs.
 
-### A. Client Components (`src/lib/axios.ts`)
+### 2. Client Components (`src/lib/axios.ts`)
 For all code running in the browser (forms, buttons, `useEffect`), use the centralized Axios instance.
 
 ```typescript
@@ -132,3 +197,31 @@ The backend expects a **flat structure** using booleans to distinguish user role
   "confirm_password": "pass"
 }
 ```
+
+---
+
+## 7. Role-Based Redirection
+
+### Concept
+We now support complex roles (Admin, Lawyer, Assistant, Tarik) and nested dashboard paths.
+Instead of hardcoding redirects in every page, we use a central utility function.
+
+### The Utility: `getDashboardUrl(user)`
+Located in `src/lib/nav-utils.ts`.
+*   Input: The full User object.
+*   Output: The exact URL string (e.g., `/dashboard/firm/admin`).
+*   Logic: Checks `org_type` first, then inspects `user_roles` array for specific capabilities.
+
+### Directory Structure Updates
+We have moved dashboard pages to be more explicit:
+
+*   **Old**: `src/app/dashboard/solo/page.tsx`
+*   **New**: `src/app/dashboard/solo/lawyer/page.tsx` (For the Solo Lawyer view)
+
+*   **Old**: `src/app/dashboard/firm/page.tsx`
+*   **New**: `src/app/dashboard/firm/admin/page.tsx` (For the Firm Admin view)
+
+### How to Add a New Role View
+1.  Create the folder: `src/app/dashboard/firm/new-role/page.tsx`.
+2.  Update `src/lib/nav-utils.ts` to add a condition for that role.
+3.  The App will automatically redirect users there on login.

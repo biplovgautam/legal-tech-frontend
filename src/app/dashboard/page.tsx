@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
+import { getDashboardUrl } from "@/lib/nav-utils";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -24,10 +25,9 @@ export default function DashboardPage() {
       return;
     }
 
-    if (user.org_type === "SOLO") {
-      router.replace("/dashboard/solo");
-    } else if (user.org_type === "FIRM") {
-      router.replace("/dashboard/firm");
+    const target = getDashboardUrl(user);
+    if (target !== "/dashboard") {
+        router.replace(target);
     }
   }, [initialized, loading, user, router]);
 

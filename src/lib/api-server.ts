@@ -35,10 +35,9 @@ export async function fetchServer(endpoint: string, options: RequestInit = {}) {
 
   if (!res.ok) {
     if (res.status === 401) return null; 
-    // You might want to throw or return null depending on usage
-    // throw new Error('API Error');
-    console.error(`Fetch failed for ${endpoint}: ${res.status} ${res.statusText}`);
-    return null; 
+    
+    // Throw on server errors so we can distinguish "Not Logged In" from "Backend Down"
+    throw new Error(`API Error: ${res.status} ${res.statusText}`);
   }
 
   return res.json();

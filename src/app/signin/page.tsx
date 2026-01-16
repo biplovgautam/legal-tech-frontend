@@ -10,6 +10,8 @@ import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
 
+import { getDashboardUrl } from "@/lib/nav-utils";
+
 export default function SignInPage() {
   const router = useRouter();
 
@@ -17,18 +19,13 @@ export default function SignInPage() {
   const loading = useAuthStore((s) => s.loading);
   const initialized = useAuthStore((s) => s.initialized);
 
-  console.log(user)
-
   useEffect(() => {
     if (!initialized || loading) return;
 
     // Only redirect if user IS logged in
     if (user) {
-      if (user.org_type === "SOLO") {
-        router.replace("/dashboard/solo");
-      } else if (user.org_type === "FIRM") {
-        router.replace("/dashboard/firm");
-      }
+        const target = getDashboardUrl(user);
+        router.replace(target);
     }
   }, [initialized, loading, user, router]);
 
@@ -78,8 +75,12 @@ export default function SignInPage() {
       });
 
       // Backend now sets the HttpOnly cookie. We don't touch cookies here.
-      const { org_type } = res.data;
-
+      // We no longer rely on res.data.org_type directly here, instead we can 
+      // rely on the getUser fetch or a hard refresh.
+      // However, to keep it fast, we can use the response data if it matches our user structure
+      // But since we navigate via router.refresh() -> Dashboard Layout -> Fetch User -> Client Init -> Store
+      // We can just redirect to root dashboard and let the dashboard/page.tsx handle the specific routing
+      
       if (res.status === 200 || res.status === 201) {
         toast.success(res.data.message || "Login successful");
         
@@ -91,13 +92,9 @@ export default function SignInPage() {
         // Refresh the router to update Server Components with the new cookie
         router.refresh();
 
-        if (org_type === "SOLO") {
-          router.replace("/dashboard/solo");
-        } else if (org_type === "FIRM") {
-          router.replace("/dashboard/firm");
-        } else {
-          router.replace("/dashboard");
-        }
+        // Send to root dashboard first - the dashboard/page.tsx will handle the intelligent routing
+        // based on the fresh full user profile fetched by the layout
+        router.replace("/dashboard");
       } else {
         toast.error(res.data);
       }

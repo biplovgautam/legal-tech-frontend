@@ -1,40 +1,41 @@
 "use client";
 
 import Loader from "@/components/ui/loader";
+import LogoutButton from "@/components/ui/LogoutButton";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function SoloDashboard() {
+export default function SoloAssistantDashboard() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const loading = useAuthStore((s) => s.loading);
   const initialized = useAuthStore((s) => s.initialized);
-
-  console.log(user);
 
   useEffect(() => {
     if (!initialized || loading) return;
 
     if (!user) {
       router.replace("/signin");
-      return;
     }
+  }, [user, loading, initialized, router]);
 
-    if (user.org_type === "SOLO") {
-      router.replace("/dashboard/solo");
-    } else if (user.org_type === "FIRM") {
-      router.replace("/dashboard/firm");
-    }
-  }, [initialized, loading, user, router]);
-
-  if (loading) {
+  if (loading || !initialized) {
     return (
-      <div className="fixed top-0 left-0 w-full h-full bg-white z-999999">
+      <div className="flex h-screen w-full items-center justify-center">
         <Loader />
       </div>
     );
   }
 
-  return <div>SoloDashboard</div>;
+  if (!user) return null;
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Solo Assistant Dashboard</h1>
+        <LogoutButton />
+      </div>
+    </div>
+  );
 }
